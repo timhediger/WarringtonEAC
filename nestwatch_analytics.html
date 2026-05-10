@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NestWatch Analytics — WarringtonEAC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+  :root {
+    --bg:        #F7F4EE;
+    --card:      #FFFFFF;
+    --border:    #DDD9CF;
+    --text:      #2A2822;
+    --muted:     #7A776E;
+    --accent:    #4A7C3F;
+    --accent2:   #8B5E3C;
+    --header-bg: #2A3D1F;
+    --header-fg: #E8F0E4;
+    --stripe:    #F2EFE8;
+    --link:      #4A7C3F;
+    --tag-bg:    #E4EDE2;
+    --tag-fg:    #2A3D1F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 300;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── Org badge ── */
+  .org-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: var(--header-fg);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.25);
+    margin-bottom: 10px;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    background: var(--header-bg);
+    color: var(--header-fg);
+    padding: 48px 60px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '🐦';
+    position: absolute;
+    right: 60px;
+    top: 30px;
+    font-size: 80px;
+    opacity: 0.15;
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .page-header .meta {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    font-weight: 300;
+  }
+  .page-header .stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 24px;
+  }
+  .page-header .stat {
+    text-align: center;
+  }
+  .page-header .stat .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    display: block;
+    line-height: 1;
+  }
+  .page-header .stat .lbl {
+    font-size: 0.75rem;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 400;
+    padding: 14px 16px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .nav a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── Main content ── */
+  .content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 40px 80px;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 56px;
+    scroll-margin-top: 60px;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .section-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+    min-width: 24px;
+  }
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .section .desc {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+    margin-left: 36px;
+    max-width: 680px;
+    line-height: 1.55;
+  }
+
+  /* ── Table ── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.855rem;
+  }
+  thead th {
+    background: var(--header-bg);
+    color: var(--header-fg);
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 10px 14px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  tbody tr:nth-child(even) { background: var(--stripe); }
+  tbody tr:hover { background: #EBF2E9; }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* special cell styles */
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.success { color: var(--accent); font-weight: 600; }
+  td.active { color: #B07D2A; font-weight: 600; }
+  td.empty { color: var(--muted); font-style: italic; }
+
+  /* ── No data ── */
+  .no-data {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.9rem;
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 32px;
+    border-top: 1px solid var(--border);
+    background: var(--card);
+  }
+  .footer-main {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .footer-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+    <div class="page-header">
+      <div class="org-badge">Cornell Lab NestWatch Participant</div>
+      <h1>NestWatch Analytics</h1>
+      <div class="meta">Warrington EAC NestWatch Program &nbsp;·&nbsp; May 10, 2026</div>
+      <div class="stats">
+        <div class="stat"><span class="num">43</span><span class="lbl">Nest Boxes</span></div>
+        <div class="stat"><span class="num">35</span><span class="lbl">Nesting Attempts</span></div>
+        <div class="stat"><span class="num">18</span><span class="lbl">Active Nests</span></div>
+        <div class="stat"><span class="num">58</span><span class="lbl">Total Eggs</span></div>
+        <div class="stat"><span class="num">21</span><span class="lbl">Total Chicks</span></div>
+        <div class="stat"><span class="num">53</span><span class="lbl">Nest Checks</span></div>
+      </div>
+    </div>
+    <nav class="nav"><a href="#overview">Season Overview</a><a href="#active">Current Active Nests</a><a href="#first_egg">First Egg Date Trends</a><a href="#productivity">Egg & Young Production</a><a href="#site_productivity">Site Productivity</a><a href="#fate">Nest Fate Breakdown</a><a href="#periods">Egg & Nest Timing</a><a href="#visits">Visit Activity by Nest</a><a href="#utilization">Box Utilization</a><a href="#hosp">House Sparrow Pressure</a></nav>
+    <div class="content">
+      
+        <section class="section" id="overview">
+          <div class="section-header">
+            <span class="section-num">01</span>
+            <h2>Season Overview</h2>
+          </div>
+          <p class="desc">Number of nesting attempts by species and year, with the percentage that successfully produced young. 'Active' means the nest is still being monitored and has no final outcome yet.</p>
+          <div class="table-wrap"><table><thead><tr><th>Year</th><th>Species</th><th>Attempts</th><th>Successful</th><th>Active</th><th>Success Rate</th></tr></thead><tbody><tr><td class="num">2026</td><td>Eastern Bluebird</td><td class="num">12</td><td class="success">1</td><td class="active">11</td><td class="success">100.0%</td></tr><tr><td class="num">2026</td><td>Tree Swallow</td><td class="num">3</td><td class="success">0</td><td class="active">3</td><td class="success">—</td></tr><tr><td class="num">2026</td><td>House Sparrow</td><td class="num">1</td><td class="success">0</td><td class="active">1</td><td class="success">—</td></tr><tr><td class="num">2026</td><td>Carolina Chickadee</td><td class="num">1</td><td class="success">0</td><td class="active">1</td><td class="success">—</td></tr></tbody></table></div>
+        </section>
+        
+        <section class="section" id="active">
+          <div class="section-header">
+            <span class="section-num">02</span>
+            <h2>Current Active Nests</h2>
+          </div>
+          <p class="desc">All nests currently being monitored, showing the most recent visit data. Use this as your day-to-day reference for which boxes to check and what to expect.</p>
+          <div class="table-wrap"><table><thead><tr><th>Site</th><th>Species</th><th>Attempt No.</th><th>First Egg Date</th><th>Hatch Date</th><th>Last Checked</th><th>Eggs at Last Check</th><th>Chicks at Last Check</th><th>Status Code</th></tr></thead><tbody><tr><td>AR BB02</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">5</td><td>0</td><td>cn</td></tr><tr><td>EP BB01</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">0</td><td>5</td><td>cn</td></tr><tr><td>EP BB02</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">4</td><td>0</td><td>cn</td></tr><tr><td>EP BB03</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>cn</td></tr><tr><td>HC BB02</td><td>House Sparrow</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">0</td><td>0</td><td>cn</td></tr><tr><td>MC BB01</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">1</td><td>2</td><td>cn</td></tr><tr><td>MC BB04</td><td>Eastern Bluebird</td><td>2</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">0</td><td>0</td><td>in</td></tr><tr><td>MW BB02</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-04-30</td><td class="num">2</td><td>0</td><td>cn</td></tr><tr><td>RAH BB01</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">0</td><td>5</td><td>cn</td></tr><tr><td>RS BB02</td><td>Tree Swallow</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-09</td><td class="num">1</td><td>0</td><td>cn</td></tr><tr><td>RS BB03</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-09</td><td class="num">1</td><td>4</td><td>cn</td></tr><tr><td>RS BB05</td><td>Tree Swallow</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-09</td><td class="num">1</td><td>0</td><td>cn</td></tr><tr><td>UN BB21</td><td>Carolina Chickadee</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-09</td><td class="num">2</td><td>0</td><td>cn</td></tr><tr><td>UN BB22</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-09</td><td class="num">0</td><td>5</td><td>cn</td></tr><tr><td>WP BB08</td><td>Tree Swallow</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">1</td><td>0</td><td>cn</td></tr><tr><td>WT BB01</td><td>Eastern Bluebird</td><td>1</td><td class="empty"><span class="empty">—</span></td><td class="empty"><span class="empty">—</span></td><td>2026-05-07</td><td class="num">3</td><td class="empty"><span class="empty">—</span></td><td>cn</td></tr></tbody></table></div>
+        </section>
+        
+        <section class="section" id="first_egg">
+          <div class="section-header">
+            <span class="section-num">03</span>
+            <h2>First Egg Date Trends</h2>
+          </div>
+          <p class="desc">The date the first egg was laid, averaged across all nests per species per year. Tracking this over many seasons can reveal whether birds are nesting earlier or later over time — a potential indicator of environmental change.</p>
+          <div class="table-wrap"><table><thead><tr><th>Year</th><th>Species</th><th>Nests Recorded</th><th>Earliest</th><th>Avg First Egg</th><th>Latest</th><th>Day of Year (avg)</th></tr></thead><tbody><tr><td class="num">2026</td><td>Eastern Bluebird</td><td>1</td><td>2026-04-18</td><td>2026-04-18</td><td>2026-04-18</td><td class="num">107</td></tr><tr><td class="num">2026</td><td>House Sparrow</td><td>3</td><td>2026-04-25</td><td>2026-04-28</td><td>2026-05-01</td><td class="num">117</td></tr></tbody></table></div>
+        </section>
+        
+        <section class="section" id="productivity">
+          <div class="section-header">
+            <span class="section-num">04</span>
+            <h2>Egg & Young Production</h2>
+          </div>
+          <p class="desc">How many eggs were laid on average, how many chicks survived, and what percentage of eggs became live young — a measure of how productive each species has been in your boxes.</p>
+          <div class="no-data">Query error: no such column: peak.max_young</div>
+        </section>
+        
+        <section class="section" id="site_productivity">
+          <div class="section-header">
+            <span class="section-num">05</span>
+            <h2>Site Productivity</h2>
+          </div>
+          <p class="desc">Total young produced per nest box across all years. High-producing sites are your most valuable habitat; low-producing ones may benefit from relocation or management changes.</p>
+          <div class="no-data">Query error: no such column: peak.max_young</div>
+        </section>
+        
+        <section class="section" id="fate">
+          <div class="section-header">
+            <span class="section-num">06</span>
+            <h2>Nest Fate Breakdown</h2>
+          </div>
+          <p class="desc">The final outcome of every completed nest attempt, grouped by cause. Helps identify whether nest failures are due to predators, weather, abandonment, or other factors.</p>
+          <div class="table-wrap"><table><thead><tr><th>Species</th><th>Fate</th><th>Count</th></tr></thead><tbody><tr><td>Eastern Bluebird</td><td>Success</td><td class="num">1</td></tr></tbody></table></div>
+        </section>
+        
+        <section class="section" id="periods">
+          <div class="section-header">
+            <span class="section-num">07</span>
+            <h2>Egg & Nest Timing</h2>
+          </div>
+          <p class="desc">How long eggs took to hatch (incubation period) and how long chicks stayed in the nest before fledging (time in nest), for nests where all three key dates were recorded.</p>
+          <div class="no-data">No data available for this query.</div>
+        </section>
+        
+        <section class="section" id="visits">
+          <div class="section-header">
+            <span class="section-num">08</span>
+            <h2>Visit Activity by Nest</h2>
+          </div>
+          <p class="desc">How often each nest was checked, the date range of monitoring, and the highest egg and chick counts recorded. Shows both monitoring effort and how each nest progressed through the season.</p>
+          <div class="table-wrap"><table><thead><tr><th>Site</th><th>Species</th><th>Total Visits</th><th>First Visit</th><th>Last Visit</th><th>Most Eggs Seen</th><th>Most Chicks Seen</th></tr></thead><tbody><tr><td>UN BB22</td><td>Eastern Bluebird</td><td class="num">3</td><td>2026-04-26</td><td>2026-05-09</td><td class="num">5</td><td>5</td></tr><tr><td>UN BB21</td><td>Carolina Chickadee</td><td class="num">2</td><td>2026-05-03</td><td>2026-05-09</td><td class="num">2</td><td>0</td></tr><tr><td>RS BB05</td><td>Tree Swallow</td><td class="num">1</td><td>2026-05-09</td><td>2026-05-09</td><td class="num">1</td><td>0</td></tr><tr><td>RS BB03</td><td>Eastern Bluebird</td><td class="num">3</td><td>2026-04-26</td><td>2026-05-09</td><td class="num">5</td><td>4</td></tr><tr><td>RS BB02</td><td>Tree Swallow</td><td class="num">1</td><td>2026-05-09</td><td>2026-05-09</td><td class="num">1</td><td>0</td></tr><tr><td>LN BB04</td><td>House Sparrow</td><td class="num">1</td><td>2026-05-09</td><td>2026-05-09</td><td class="num">0</td><td>0</td></tr><tr><td>LN BB01</td><td>House Sparrow</td><td class="num">1</td><td>2026-05-09</td><td>2026-05-09</td><td class="num">0</td><td>0</td></tr><tr><td>WT BB01</td><td>Eastern Bluebird</td><td class="num">2</td><td>2026-04-26</td><td>2026-05-07</td><td class="num">3</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB08</td><td>Tree Swallow</td><td class="num">1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">1</td><td>0</td></tr><tr><td>WP BB07</td><td class="empty"></td><td class="num">1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">0</td><td>0</td></tr><tr><td>WP BB02</td><td>House Sparrow</td><td class="num">2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">5</td><td>0</td></tr><tr><td>WP BB01</td><td class="empty"></td><td class="num">2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">0</td><td>0</td></tr><tr><td>RAH BB01</td><td>Eastern Bluebird</td><td class="num">2</td><td>2026-04-23</td><td>2026-05-07</td><td class="num">5</td><td>5</td></tr><tr><td>MC BB04</td><td>Eastern Bluebird</td><td class="num">3</td><td>2026-04-23</td><td>2026-05-07</td><td class="num">5</td><td>0</td></tr><tr><td>MC BB01</td><td>Eastern Bluebird</td><td class="num">2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">2</td><td>2</td></tr><tr><td>HC BB02</td><td>House Sparrow</td><td class="num">1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">0</td><td>0</td></tr><tr><td>HC BB01</td><td class="empty"></td><td class="num">1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">0</td><td>0</td></tr><tr><td>EP BB03</td><td>Eastern Bluebird</td><td class="num">2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">2</td><td>0</td></tr><tr><td>EP BB02</td><td>Eastern Bluebird</td><td class="num">2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">4</td><td>0</td></tr><tr><td>EP BB01</td><td>Eastern Bluebird</td><td class="num">3</td><td>2026-04-23</td><td>2026-05-07</td><td class="num">5</td><td>5</td></tr><tr><td>AW BB02</td><td>House Sparrow</td><td class="num">2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">2</td><td>0</td></tr><tr><td>AW BB01</td><td class="empty"></td><td class="num">1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">0</td><td>0</td></tr><tr><td>AR BB02</td><td>Eastern Bluebird</td><td class="num">1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">5</td><td>0</td></tr><tr><td>AR BB01</td><td>House Sparrow</td><td class="num">3</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">0</td><td>0</td></tr><tr><td>LN BB03</td><td>House Sparrow</td><td class="num">4</td><td>2026-04-09</td><td>2026-05-03</td><td class="num">3</td><td>0</td></tr><tr><td>MW BB02</td><td>Eastern Bluebird</td><td class="num">2</td><td>2026-04-23</td><td>2026-04-30</td><td class="num">2</td><td>0</td></tr><tr><td>MW BB01</td><td>House Sparrow</td><td class="num">1</td><td>2026-04-30</td><td>2026-04-30</td><td class="num">0</td><td>0</td></tr><tr><td>AR BB02</td><td>House Sparrow</td><td class="num">1</td><td>2026-04-30</td><td>2026-04-30</td><td class="num">0</td><td>0</td></tr><tr><td>LN BB02</td><td class="empty"></td><td class="num">2</td><td>2026-03-30</td><td>2026-04-09</td><td class="num">0</td><td>0</td></tr></tbody></table></div>
+        </section>
+        
+        <section class="section" id="utilization">
+          <div class="section-header">
+            <span class="section-num">09</span>
+            <h2>Box Utilization</h2>
+          </div>
+          <p class="desc">Which nest boxes are active this season and which are empty. Active boxes have at least one nesting attempt with visit checks recorded. Empty boxes were monitored but had no nesting activity.</p>
+          <div class="table-wrap"><table><thead><tr><th>Site</th><th>Habitat</th><th>Status</th><th>Species</th><th>Max Eggs Seen</th><th>Max Chicks Seen</th><th>Visits This Season</th><th>Last Checked</th></tr></thead><tbody><tr><td>AR BB02</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">5</td><td>0</td><td class="num">2</td><td>2026-05-07</td></tr><tr><td>EP BB01</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">5</td><td>5</td><td class="num">3</td><td>2026-05-07</td></tr><tr><td>EP BB02</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">4</td><td>0</td><td class="num">2</td><td>2026-05-07</td></tr><tr><td>EP BB03</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">2</td><td>0</td><td class="num">2</td><td>2026-05-07</td></tr><tr><td>HC BB01</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>—</td><td class="num">0</td><td>0</td><td class="num">1</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>HC BB02</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>House Sparrow</td><td class="num">0</td><td>0</td><td class="num">1</td><td>2026-05-07</td></tr><tr><td>MC BB01</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">2</td><td>2</td><td class="num">2</td><td>2026-05-07</td></tr><tr><td>MC BB04</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">5</td><td>0</td><td class="num">3</td><td>2026-05-07</td></tr><tr><td>MW BB02</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">2</td><td>0</td><td class="num">2</td><td>2026-04-30</td></tr><tr><td>RAH BB01</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">5</td><td>5</td><td class="num">2</td><td>2026-05-07</td></tr><tr><td>RS BB02</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Tree Swallow</td><td class="num">1</td><td>0</td><td class="num">1</td><td>2026-05-09</td></tr><tr><td>RS BB03</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">5</td><td>4</td><td class="num">3</td><td>2026-05-09</td></tr><tr><td>RS BB05</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Tree Swallow</td><td class="num">1</td><td>0</td><td class="num">1</td><td>2026-05-09</td></tr><tr><td>UN BB21</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Carolina Chickadee</td><td class="num">2</td><td>0</td><td class="num">2</td><td>2026-05-09</td></tr><tr><td>UN BB22</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">5</td><td>5</td><td class="num">3</td><td>2026-05-09</td></tr><tr><td>WP BB07</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>—</td><td class="num">0</td><td>0</td><td class="num">1</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB08</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Tree Swallow</td><td class="num">1</td><td>0</td><td class="num">1</td><td>2026-05-07</td></tr><tr><td>WT BB01</td><td class="empty"><span class="empty">—</span></td><td>Active</td><td>Eastern Bluebird</td><td class="num">3</td><td>—</td><td class="num">2</td><td>2026-05-07</td></tr><tr><td>AR BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">3</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>AW BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">1</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>AW BB02</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">2</td><td>0</td><td class="num">2</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>EP BB04</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>EP BB05</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>LN BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">1</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>LN BB02</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">2</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>LN BB03</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">3</td><td>0</td><td class="num">4</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>LN BB04</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">1</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>LN BB06</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>MW BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">1</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>PW BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>PW BB02</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>RAH BB02</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>RS BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>RS BB04</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>RS BB06</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>RS BB07</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB01</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">0</td><td>0</td><td class="num">2</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB02</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">5</td><td>0</td><td class="num">2</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB04</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB05</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB06</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB09</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr><tr><td>WP BB10</td><td class="empty"><span class="empty">—</span></td><td>Empty</td><td>—</td><td class="num">—</td><td>—</td><td class="num">0</td><td class="empty"><span class="empty">—</span></td></tr></tbody></table></div>
+        </section>
+        
+        <section class="section" id="hosp">
+          <div class="section-header">
+            <span class="section-num">10</span>
+            <h2>House Sparrow Pressure</h2>
+          </div>
+          <p class="desc">Nest boxes where House Sparrows were removed. Each removal event represents a separate nesting attempt that was managed. Boxes with multiple events are under the heaviest pressure and may benefit from more frequent monitoring.</p>
+          <div class="table-wrap"><table><thead><tr><th>Site</th><th>Removal Events</th><th>Earliest Check</th><th>Most Recent Check</th><th>Total Visits</th></tr></thead><tbody><tr><td>WP BB02</td><td>2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">2</td></tr><tr><td>WP BB01</td><td>2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">2</td></tr><tr><td>LN BB03</td><td>2</td><td>2026-04-09</td><td>2026-05-03</td><td class="num">4</td></tr><tr><td>AW BB02</td><td>2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">2</td></tr><tr><td>AR BB01</td><td>2</td><td>2026-04-30</td><td>2026-05-07</td><td class="num">3</td></tr><tr><td>MW BB01</td><td>1</td><td>2026-04-30</td><td>2026-04-30</td><td class="num">1</td></tr><tr><td>LN BB04</td><td>1</td><td>2026-05-09</td><td>2026-05-09</td><td class="num">1</td></tr><tr><td>LN BB01</td><td>1</td><td>2026-05-09</td><td>2026-05-09</td><td class="num">1</td></tr><tr><td>HC BB02</td><td>1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">1</td></tr><tr><td>AW BB01</td><td>1</td><td>2026-05-07</td><td>2026-05-07</td><td class="num">1</td></tr><tr><td>AR BB02</td><td>1</td><td>2026-04-30</td><td>2026-04-30</td><td class="num">1</td></tr></tbody></table></div>
+        </section>
+        
+    </div>
+    
+<footer>
+  <div class="footer-main">Warrington EAC NestWatch Program &nbsp;·&nbsp; 2026 Nesting Season</div>
+  <div class="footer-sub">
+    Data collected through <a href="https://nestwatch.org" target="_blank">Cornell Lab NestWatch</a>
+    citizen science program &nbsp;·&nbsp; Generated May 10, 2026
+  </div>
+</footer>
+</body>
+</html>

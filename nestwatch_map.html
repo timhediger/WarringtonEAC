@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NestWatch Box Map — WarringtonEAC</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+3:wght@300;400;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', sans-serif; font-weight: 300; background: #F7F4EE; color: #2A2822; }
+
+  .page-header {
+    background: #2A3D1F; color: #E8F0E4;
+    padding: 24px 40px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .org-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    color: #E8F0E4;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.25);
+    margin-bottom: 8px;
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 600;
+  }
+  .page-header .meta { font-size: 0.82rem; opacity: 0.65; margin-top: 2px; }
+
+  .legend {
+    display: flex; gap: 20px; align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+  .legend-dot {
+    width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid transparent;
+  }
+
+  .stats-bar {
+    background: #fff; border-bottom: 1px solid #DDD9CF;
+    padding: 10px 40px; display: flex; gap: 32px;
+  }
+  .stat { text-align: center; }
+  .stat .num { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 600; display: block; line-height: 1; }
+  .stat .lbl { font-size: 0.7rem; color: #7A776E; text-transform: uppercase; letter-spacing: 0.07em; }
+  .stat.active .num { color: #3B6D11; }
+  .stat.hosp .num { color: #B07D2A; }
+  .stat.empty .num { color: #888780; }
+
+  #map { height: calc(100vh - 130px); width: 100%; }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    font-family: 'Source Sans 3', sans-serif;
+  }
+  .popup-title {
+    font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; color: #2A2822;
+  }
+  .popup-species {
+    font-size: 0.82rem; margin-bottom: 8px;
+  }
+  .popup-row {
+    display: flex; justify-content: space-between; gap: 16px;
+    font-size: 0.78rem; color: #5F5E5A; padding: 2px 0;
+    border-bottom: 0.5px solid #E8E6DF;
+  }
+  .popup-row:last-child { border-bottom: none; }
+  .popup-row span:last-child { color: #2A2822; font-weight: 400; }
+  .popup-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.72rem; font-weight: 600; margin-bottom: 8px;
+  }
+  .badge-active { background: #E4EDE2; color: #2A3D1F; }
+  .badge-hosp { background: #FDF0D5; color: #633806; }
+  .badge-empty { background: #EEECEA; color: #5F5E5A; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <div class="org-badge">Cornell Lab NestWatch Participant</div>
+    <h1>Nest Box Map</h1>
+    <div class="meta">Warrington EAC NestWatch Program &nbsp;·&nbsp; 2026 Nesting Season</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#2DB82D;border-color:#1A7A1A"></div> Active nest</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#FF8C00;border-color:#B35E00"></div> House Sparrow removed</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#C0C0C0;border-color:#888780"></div> Empty this season</div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat active"><span class="num">16</span><span class="lbl">Active Nests</span></div>
+  <div class="stat hosp"><span class="num">9</span><span class="lbl">HOSP Removed</span></div>
+  <div class="stat empty"><span class="num">18</span><span class="lbl">Empty Boxes</span></div>
+  <div class="stat"><span class="num">43</span><span class="lbl">Total Sites Mapped</span></div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const markers = [{"site_id": "AR BB01", "site_name": "AR BB01", "lat": 40.25595, "lng": -75.16409, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 0, "max_young": 0, "visits": 3, "last_checked": "2026-05-07"}, {"site_id": "AR BB02", "site_name": "AR BB02", "lat": 40.25616, "lng": -75.16458, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 5, "max_young": 0, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "AW BB01", "site_name": "AW BB01", "lat": 40.24675, "lng": -75.13086, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-05-07"}, {"site_id": "AW BB02", "site_name": "AW BB02", "lat": 40.24682, "lng": -75.1311, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 2, "max_young": 0, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "EP BB01", "site_name": "EP BB01", "lat": 40.25539, "lng": -75.17226, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 5, "max_young": 5, "visits": 3, "last_checked": "2026-05-07"}, {"site_id": "EP BB02", "site_name": "EP BB02", "lat": 40.256, "lng": -75.17192, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 4, "max_young": 0, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "EP BB03", "site_name": "EP BB03", "lat": 40.25663, "lng": -75.17112, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 2, "max_young": 0, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "EP BB04", "site_name": "EP BB04", "lat": 40.25756, "lng": -75.17001, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "EP BB05", "site_name": "EP BB05", "lat": 40.25795, "lng": -75.16937, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "HC BB01", "site_name": "HC BB01", "lat": 40.25676, "lng": -75.12201, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-05-07"}, {"site_id": "HC BB02", "site_name": "HC BB02", "lat": 40.2567, "lng": -75.12158, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "House Sparrow", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-05-07"}, {"site_id": "LN BB01", "site_name": "LN BB01", "lat": 40.24253, "lng": -75.17328, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-05-09"}, {"site_id": "LN BB02", "site_name": "LN BB02", "lat": 40.24201, "lng": -75.17281, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": 0, "max_young": 0, "visits": 2, "last_checked": "2026-04-09"}, {"site_id": "LN BB03", "site_name": "LN BB03", "lat": 40.24214, "lng": -75.17326, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 3, "max_young": 0, "visits": 4, "last_checked": "2026-05-03"}, {"site_id": "LN BB04", "site_name": "LN BB04", "lat": 40.24238, "lng": -75.17296, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-05-09"}, {"site_id": "LN BB06", "site_name": "LN BB06", "lat": 40.23804, "lng": -75.16831, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "MC BB01", "site_name": "MC BB01", "lat": 40.26435, "lng": -75.17522, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 2, "max_young": 2, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "MC BB04", "site_name": "MC BB04", "lat": 40.26563, "lng": -75.17475, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 5, "max_young": 0, "visits": 3, "last_checked": "2026-05-07"}, {"site_id": "MW BB01", "site_name": "MW BB01", "lat": 40.24843, "lng": -75.17345, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-04-30"}, {"site_id": "MW BB02", "site_name": "MW BB02", "lat": 40.24834, "lng": -75.17375, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 2, "max_young": 0, "visits": 2, "last_checked": "2026-04-30"}, {"site_id": "PW BB01", "site_name": "PW BB01", "lat": 40.26299, "lng": -75.17854, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "PW BB02", "site_name": "PW BB02", "lat": 40.26344, "lng": -75.17911, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "RAH BB01", "site_name": "RAH BB01", "lat": 40.24664, "lng": -75.168, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 5, "max_young": 5, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "RAH BB02", "site_name": "RAH BB02", "lat": 40.24745, "lng": -75.16908, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "RS BB01", "site_name": "RS BB01", "lat": 40.245, "lng": -75.17418, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "RS BB02", "site_name": "RS BB02", "lat": 40.24542, "lng": -75.17413, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Tree Swallow", "max_eggs": 1, "max_young": 0, "visits": 1, "last_checked": "2026-05-09"}, {"site_id": "RS BB03", "site_name": "RS BB03", "lat": 40.24573, "lng": -75.17398, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 5, "max_young": 4, "visits": 3, "last_checked": "2026-05-09"}, {"site_id": "RS BB04", "site_name": "RS BB04", "lat": 40.24579, "lng": -75.17375, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "RS BB05", "site_name": "RS BB05", "lat": 40.2457, "lng": -75.17347, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Tree Swallow", "max_eggs": 1, "max_young": 0, "visits": 1, "last_checked": "2026-05-09"}, {"site_id": "RS BB06", "site_name": "RS BB06", "lat": 40.24561, "lng": -75.17322, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "RS BB07", "site_name": "RS BB07", "lat": 40.24533, "lng": -75.17302, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "UN BB21", "site_name": "UN BB21", "lat": 40.24468, "lng": -75.17481, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Carolina Chickadee", "max_eggs": 2, "max_young": 0, "visits": 2, "last_checked": "2026-05-09"}, {"site_id": "UN BB22", "site_name": "UN BB22", "lat": 40.24516, "lng": -75.17526, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 5, "max_young": 5, "visits": 3, "last_checked": "2026-05-09"}, {"site_id": "WP BB01", "site_name": "WP BB01", "lat": 40.26814, "lng": -75.18965, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 0, "max_young": 0, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "WP BB02", "site_name": "WP BB02", "lat": 40.26744, "lng": -75.18906, "habitat": "\u2014", "status": "hosp", "color": "#FF8C00", "ring": "#B35E00", "label": "House Sparrow management", "max_eggs": 5, "max_young": 0, "visits": 2, "last_checked": "2026-05-07"}, {"site_id": "WP BB04", "site_name": "WP BB04", "lat": 40.26498, "lng": -75.18727, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "WP BB05", "site_name": "WP BB05", "lat": 40.26473, "lng": -75.18775, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "WP BB06", "site_name": "WP BB06", "lat": 40.2641, "lng": -75.18838, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "WP BB07", "site_name": "WP BB07", "lat": 40.26388, "lng": -75.18826, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": 0, "max_young": 0, "visits": 1, "last_checked": "2026-05-07"}, {"site_id": "WP BB08", "site_name": "WP BB08", "lat": 40.26277, "lng": -75.18831, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Tree Swallow", "max_eggs": 1, "max_young": 0, "visits": 1, "last_checked": "2026-05-07"}, {"site_id": "WP BB09", "site_name": "WP BB09", "lat": 40.26265, "lng": -75.18837, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "WP BB10", "site_name": "WP BB10", "lat": 40.26225, "lng": -75.18829, "habitat": "\u2014", "status": "empty", "color": "#C0C0C0", "ring": "#888780", "label": "No nesting activity", "max_eggs": null, "max_young": null, "visits": 0, "last_checked": "\u2014"}, {"site_id": "WT BB01", "site_name": "WT BB01", "lat": 40.23856, "lng": -75.13833, "habitat": "\u2014", "status": "active", "color": "#2DB82D", "ring": "#1A7A1A", "label": "Eastern Bluebird", "max_eggs": 3, "max_young": null, "visits": 2, "last_checked": "2026-05-07"}];
+
+const map = L.map('map');
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 19
+}).addTo(map);
+
+function makeIcon(color, ring) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width: 22px; height: 22px;
+      background: ${color};
+      border: 3px solid ${ring};
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+    "></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -14]
+  });
+}
+
+const bounds = [];
+
+markers.forEach(m => {
+  const latlng = [m.lat, m.lng];
+  bounds.push(latlng);
+
+  const badgeClass = m.status === 'active' ? 'badge-active' :
+                     m.status === 'hosp'   ? 'badge-hosp' : 'badge-empty';
+  const badgeLabel = m.status === 'active' ? 'Active' :
+                     m.status === 'hosp'   ? 'House Sparrow removed' : 'Empty this season';
+
+  const popup = `
+    <div style="min-width: 200px;">
+      <div class="popup-title">${m.site_name}</div>
+      <span class="popup-badge ${badgeClass}">${badgeLabel}</span>
+      <div class="popup-species" style="color: ${m.color}">${m.label}</div>
+      <div class="popup-row"><span>Habitat</span><span>${m.habitat}</span></div>
+      <div class="popup-row"><span>Visits</span><span>${m.visits}</span></div>
+      <div class="popup-row"><span>Max eggs seen</span><span>${m.max_eggs ?? '—'}</span></div>
+      <div class="popup-row"><span>Max chicks seen</span><span>${m.max_young ?? '—'}</span></div>
+      <div class="popup-row"><span>Last checked</span><span>${m.last_checked}</span></div>
+    </div>
+  `;
+
+  L.marker(latlng, { icon: makeIcon(m.color, m.ring) })
+    .addTo(map)
+    .bindPopup(popup);
+});
+
+if (bounds.length > 0) {
+  map.fitBounds(bounds, { padding: [40, 40] });
+}
+</script>
+<div style="
+  text-align: center; padding: 14px; background: #2A3D1F; color: #E8F0E4;
+  font-family: 'Source Sans 3', sans-serif; font-size: 0.78rem;">
+  Warrington EAC NestWatch Program &nbsp;·&nbsp; Data via
+  <a href="https://nestwatch.org" target="_blank"
+     style="color: #9FD98A; text-decoration: none;">Cornell Lab NestWatch</a>
+  &nbsp;·&nbsp; Generated May 10, 2026
+</div>
+</body>
+</html>
